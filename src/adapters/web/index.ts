@@ -71,13 +71,15 @@ function messageTransform(type: string, title: string, messages: any[], ctx: Web
   const contentMessage = createContentMessage(messages, baseStyle.fontSize);
 
   const baseStyles = `margin-left:${group.enable ? '-16px' : '0'};padding:${baseStyle.paddingBlock} ${baseStyle.paddingInline};font-size:${baseStyle.fontSize};`;
-  const hasTitle = title !== type;
+  const hasTitle = title !== type && !group.enable;
 
   return {
     message: `%c${type}${hasTitle ? `%c(${title})` : ''}%c\n%c${contentMessage.padEnd(type.length, ' ')}`,
     styles: [
       `${baseStyles}background:${theme.primary};color:${theme.tagColor};border-radius:${baseStyle.borderRadiusSize} ${baseStyle.borderRadiusSize} 0 0;text-transform:uppercase;`,
-      ...(hasTitle ? [`${baseStyles}margin-left:${baseStyle.lineWidth};color:${theme.titleColor};`] : []),
+      ...(hasTitle
+        ? [`${baseStyles}margin-left:${baseStyle.lineWidth};padding-inline:0;color:${theme.titleColor};`]
+        : []),
       'font-size:0;line-height:0;',
       `${baseStyles}display:inline-block;margin-top:-${baseStyle.lineWidth};background:#fff;border:${baseStyle.lineWidth} solid ${theme.primary};border-radius: 0 ${baseStyle.borderRadiusSize} ${baseStyle.borderRadiusSize};`,
     ],

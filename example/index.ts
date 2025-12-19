@@ -1,4 +1,6 @@
 /** biome-ignore-all lint/style/useNamingConvention: example */
+// import { createLogger } from '@cmtlyt/logger';
+// import { webConsoleAdapter } from '@cmtlyt/logger/adapters/web';
 import { createLogger } from '../src';
 import { webConsoleAdapter } from '../src/adapters/web';
 
@@ -24,12 +26,12 @@ const logger = createLogger({
     },
     webConsoleAdapter({
       group: {
-        enable: true,
+        enable: false,
         collapsed: false,
       },
       consoleLevel: 'log',
       getSubTitle: (info) => info.transformData.point,
-      getMessages: (info) => [info.transformData.params, ...info.transformData.messages],
+      getMessages: (info) => info.messages.slice(1),
       customStyle: (info) => {
         info.baseStyle.fontSize = '8px';
         return info;
@@ -40,12 +42,6 @@ const logger = createLogger({
 
 logger.debug('test', 'debug');
 logger.info('test', 'info');
-
-import { createLogger as createLogger2 } from '@cmtlyt/logger';
-
-const logger2 = createLogger2();
-
-logger2.debug('test', 'debug');
 
 const arr = [3, 4, 5];
 
@@ -67,6 +63,7 @@ const obj = {
   },
 };
 
+// 循环引用测试
 // @ts-expect-error
 obj.obj = obj;
 

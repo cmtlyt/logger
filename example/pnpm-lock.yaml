@@ -1,0 +1,22 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@cmtlyt/logger':
+        specifier: ^0.3.0
+        version: 0.3.0
+
+packages:
+
+  '@cmtlyt/logger@0.3.0':
+    resolution: {integrity: sha512-0qId092y+ITLN56sQTBxsNOeVSQ9r8mjghp3babMjS7pAJZ8USTKi7JAWaFZKTdqGFyzp/CCHqAY6S/wgW28lA==}
+
+snapshots:
+
+  '@cmtlyt/logger@0.3.0': {}
