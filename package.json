@@ -16,7 +16,8 @@
     "build": "rslib build",
     "check": "biome check --write",
     "dev": "rslib build --watch",
-    "format": "biome format --write"
+    "format": "biome format --write",
+    "prepublishOnly": "pnpm run build"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.1",
@@ -93,6 +94,5 @@
     "logger",
     "日志输出",
     "埋点"
-  ],
-  "private": true
+  ]
 }
