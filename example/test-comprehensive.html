@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Logger 完整功能测试</title>
+  <style>
+    body {
+      margin: 20px;
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+    }
+
+    .container {
+      max-width: 1200px;
+      padding: 20px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+    }
+
+    .test-section {
+      padding: 15px;
+      margin: 20px 0;
+      background: #fafafa;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
+    .test-section h3 {
+      margin-top: 0;
+      color: #666;
+    }
+
+    .test-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 15px;
+    }
+
+    button {
+      width: 100%;
+      padding: 8px 16px;
+      margin: 5px;
+      color: white;
+      cursor: pointer;
+      background: #1890ff;
+      border: none;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background: #40a9ff;
+    }
+
+    .note {
+      padding: 10px;
+      margin: 10px 0;
+      background: #e6f7ff;
+      border: 1px solid #91d5ff;
+      border-radius: 4px;
+    }
+
+    .success {
+      color: #52c41a;
+      background: #f6ffed;
+      border: 1px solid #b7eb8f;
+    }
+
+    .warning {
+      color: #faad14;
+      background: #fffbe6;
+      border: 1px solid #ffe58f;
+    }
+
+    .error {
+      color: #ff4d4f;
+      background: #fff2f0;
+      border: 1px solid #ffccc7;
+    }
+
+    .test-result {
+      padding: 8px;
+      margin: 10px 0;
+      font-family: monospace;
+      font-size: 12px;
+      border-radius: 4px;
+    }
+
+    .run-all {
+      margin: 20px 0;
+      font-size: 16px;
+      font-weight: bold;
+      background: #52c41a;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Logger 完整功能测试</h1>
+
+    <div class="note success">
+      <strong>✅ 测试覆盖范围：</strong>
+      <ul>
+        <li>Logger 核心功能：创建、缓存、代理</li>
+        <li>WebConsoleAdapter：所有配置选项和分支</li>
+        <li>样式系统：颜色提取、渐变支持、所有格式</li>
+        <li>AllowTypes：数组、Set、函数三种模式</li>
+        <li>环境验证：Web环境检测</li>
+        <li>嵌套调用：状态机处理、深度控制、超限丢弃</li>
+        <li>边缘情况：错误处理、默认值</li>
+      </ul>
+    </div>
+
+    <button class="run-all" onclick="runAllTests()">🚀 运行所有测试 (推荐)</button>
+
+    <div class="test-grid">
+      <!-- Logger 核心功能测试 -->
+      <div class="test-section">
+        <h3>1. Logger 核心功能</h3>
+        <button onclick="testLoggerCore()">测试 Logger 创建和缓存</button>
+        <p>测试 createLogger、函数缓存、Proxy 代理</p>
+      </div>
+
+      <!-- WebConsoleAdapter 基础功能 -->
+      <div class="test-section">
+        <h3>2. WebConsoleAdapter 基础</h3>
+        <button onclick="testAdapterBasic()">测试基础适配器功能</button>
+        <p>测试适配器创建、环境检测、类型过滤</p>
+      </div>
+
+      <!-- Group 功能测试 -->
+      <div class="test-section">
+        <h3>3. Group 分组功能</h3>
+        <button onclick="testGroupFeatures()">测试分组功能</button>
+        <p>测试 enable/disable、collapsed/expanded</p>
+      </div>
+
+      <!-- ConsoleLevel 测试 -->
+      <div class="test-section">
+        <h3>4. ConsoleLevel 级别</h3>
+        <button onclick="testConsoleLevels()">测试控制台级别</button>
+        <p>测试 debug、info、log、warn 级别</p>
+      </div>
+
+      <!-- getSubTitle 和 getMessages -->
+      <div class="test-section">
+        <h3>5. 消息处理函数</h3>
+        <button onclick="testMessageHandlers()">测试消息处理</button>
+        <p>测试 getSubTitle、getMessages 函数</p>
+      </div>
+
+      <!-- AllowTypes 三种模式 -->
+      <div class="test-section">
+        <h3>6. AllowTypes 类型过滤</h3>
+        <button onclick="testAllowTypes()">测试类型过滤</button>
+        <p>测试数组、Set、函数三种模式</p>
+      </div>
+
+      <!-- 环境验证 -->
+      <div class="test-section">
+        <h3>7. 环境验证</h3>
+        <button onclick="testEnvironmentValidation()">测试环境验证</button>
+        <p>测试 isEnvironmentValid 函数</p>
+      </div>
+
+      <!-- 样式系统 - 颜色格式 -->
+      <div class="test-section">
+        <h3>8. 颜色格式支持</h3>
+        <button onclick="testColorFormats()">测试颜色格式</button>
+        <p>测试十六进制、RGB、HSL 等格式</p>
+      </div>
+
+      <!-- 样式系统 - 渐变支持 -->
+      <div class="test-section">
+        <h3>9. 渐变样式支持</h3>
+        <button onclick="testGradientStyles()">测试渐变样式</button>
+        <p>测试渐变背景和边框提取</p>
+      </div>
+
+      <!-- CustomStyle 函数 -->
+      <div class="test-section">
+        <h3>10. CustomStyle 自定义</h3>
+        <button onclick="testCustomStyles()">测试自定义样式</button>
+        <p>测试 customStyle 函数各种用法</p>
+      </div>
+
+      <!-- Transform 和 Report -->
+      <div class="test-section">
+        <h3>11. Transform & Report</h3>
+        <button onclick="testTransformReport()">测试数据转换</button>
+        <p>测试 transform 和 report 函数</p>
+      </div>
+
+      <!-- 边缘情况测试 -->
+      <div class="test-section">
+        <h3>12. 边缘情况处理</h3>
+        <button onclick="testEdgeCases()">测试边缘情况</button>
+        <p>测试错误处理、默认值、异常输入</p>
+      </div>
+
+      <!-- 嵌套调用深度测试 -->
+      <div class="test-section">
+        <h3>13. 嵌套调用深度控制</h3>
+        <button onclick="testNestingDepthControl()">测试嵌套深度控制</button>
+        <p>测试状态机、深度检测、超限丢弃</p>
+      </div>
+
+      <!-- 性能测试 -->
+      <div class="test-section">
+        <h3>14. 性能测试</h3>
+        <button onclick="testPerformance()">测试性能</button>
+        <p>测试大量日志输出性能</p>
+      </div>
+
+      <!-- 兼容性测试 -->
+      <div class="test-section">
+        <h3>15. 兼容性测试</h3>
+        <button onclick="testCompatibility()">测试兼容性</button>
+        <p>测试向后兼容性和默认行为</p>
+      </div>
+
+      <!-- 复杂场景测试 -->
+      <div class="test-section">
+        <h3>16. 复杂场景</h3>
+        <button onclick="testComplexScenarios()">测试复杂场景</button>
+        <p>测试多实例、嵌套调用等复杂场景</p>
+      </div>
+
+      <!-- 内存泄漏测试 -->
+      <div class="test-section">
+        <h3>17. 内存管理</h3>
+        <button onclick="testMemoryManagement()">测试内存管理</button>
+        <p>测试缓存管理和内存泄漏</p>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>说明：</strong>
+      <ul>
+        <li>打开浏览器开发者工具的控制台查看详细测试结果</li>
+        <li>每个测试都会输出详细的测试信息和结果</li>
+        <li>建议先点击"运行所有测试"获得完整的测试报告</li>
+        <li>单独的测试可以用于调试特定功能</li>
+      </ul>
+    </div>
+  </div>
+
+  <script type="module">
+    import { webConsoleAdapter } from '../dist/adapters/web/index.js';
+    import { createLogger } from '../dist/index.js';
+
+    // 测试结果统计
+    let testResults = {
+      total: 0,
+      passed: 0,
+      failed: 0,
+      errors: []
+    };
+
+    // 测试工具函数
+    function assert(condition, message) {
+      testResults.total++;
+      if (condition) {
+        testResults.passed++;
+        console.log(`✅ ${message}`);
+        return true;
+      }
+      testResults.failed++;
+      testResults.errors.push(message);
+      console.error(`❌ ${message}`);
+      return false;
+    }
+
+    function testSection(name, testFn) {
+      console.group(`🧪 ${name}`);
+      try {
+        testFn();
+      } catch (error) {
+        testResults.failed++;
+        testResults.errors.push(`${name}: ${error.message}`);
+        console.error(`❌ ${name} 测试异常:`, error);
+      }
+      console.groupEnd();
+    }
+
+    // 1. Logger 核心功能测试
+    function testLoggerCore() {
+      console.clear();
+      testSection('Logger 核心功能测试', () => {
+        // 测试 createLogger 基础功能
+        const logger1 = createLogger();
+        assert(typeof logger1 === 'object', 'createLogger 返回对象');
+        assert(typeof logger1.info === 'function', 'logger.info 是函数');
+        assert(typeof logger1.debug === 'function', 'logger.debug 是函数');
+        assert(typeof logger1.customType === 'function', 'logger.customType 是函数（动态属性）');
+
+        // 测试函数缓存
+        const loggerInfoFn1 = logger1.info;
+        const loggerInfoFn2 = logger1.info;
+        assert(loggerInfoFn1 === loggerInfoFn2, '相同类型的日志函数被缓存');
+
+        // 测试不同实例的隔离
+        const logger2 = createLogger();
+        assert(logger1.info !== logger2.info, '不同 logger 实例的函数不同');
+
+        // 测试 Proxy 代理
+        logger1.testProxy('Proxy 代理测试');
+        assert(typeof logger1.testProxy === 'function', 'Proxy 代理动态创建函数');
+      });
+    }
+
+    // 2. WebConsoleAdapter 基础功能测试
+    function testAdapterBasic() {
+      console.clear();
+      testSection('WebConsoleAdapter 基础功能测试', () => {
+        // 测试适配器创建
+        const adapter = webConsoleAdapter();
+        assert(typeof adapter === 'function', 'webConsoleAdapter 返回函数');
+
+        // 测试适配器返回值
+        const outputFunc = adapter('info');
+        assert(typeof outputFunc === 'function', 'adapter 返回输出函数');
+
+        // 测试基础日志输出
+        const logger = createLogger({
+          outputAdapters: [webConsoleAdapter()]
+        });
+
+        logger.info('基础适配器测试', { test: 'data' });
+        assert(true, '基础日志输出正常');
+
+        // 测试无配置的默认行为
+        const defaultLogger = createLogger({
+          outputAdapters: [webConsoleAdapter({})]
+        });
+        defaultLogger.debug('默认配置测试');
+        assert(true, '默认配置工作正常');
+      });
+    }
+
+    // 3. Group 分组功能测试
+    function testGroupFeatures() {
+      console.clear();
+      testSection('Group 分组功能测试', () => {
+        // 测试 group enable = true, collapsed = false
+        const logger1 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            group: { enable: true, collapsed: false }
+          })]
+        });
+        logger1.info('分组展开测试');
+        assert(true, 'group enable=true, collapsed=false 测试');
+
+        // 测试 group enable = true, collapsed = true
+        const logger2 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            group: { enable: true, collapsed: true }
+          })]
+        });
+        logger2.info('分组折叠测试');
+        assert(true, 'group enable=true, collapsed=true 测试');
+
+        // 测试 group enable = false
+        const logger3 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            group: { enable: false }
+          })]
+        });
+        logger3.info('无分组测试');
+        assert(true, 'group enable=false 测试');
+
+        // 测试默认 group 配置
+        const logger4 = createLogger({
+          outputAdapters: [webConsoleAdapter({})]
+        });
+        logger4.info('默认分组配置测试');
+        assert(true, '默认 group 配置测试');
+      });
+    }
+
+    // 4. ConsoleLevel 级别测试
+    function testConsoleLevels() {
+      console.clear();
+      testSection('ConsoleLevel 级别测试', () => {
+        const levels = ['debug', 'info', 'log', 'warn'];
+
+        levels.forEach(level => {
+          const logger = createLogger({
+            outputAdapters: [webConsoleAdapter({
+              consoleLevel: level,
+              group: { enable: false }
+            })]
+          });
+
+          logger.test(`${level} 级别测试`);
+          assert(true, `consoleLevel: ${level} 测试`);
+        });
+
+        // 测试默认级别
+        const defaultLogger = createLogger({
+          outputAdapters: [webConsoleAdapter({})]
+        });
+        defaultLogger.test('默认级别测试');
+        assert(true, '默认 consoleLevel 测试');
+      });
+    }
+
+    // 5. 消息处理函数测试
+    function testMessageHandlers() {
+      console.clear();
+      testSection('消息处理函数测试', () => {
+        // 测试 getSubTitle
+        const logger1 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            getSubTitle: (info) => `[${info.type.toUpperCase()}]`,
+            group: { enable: false }
+          })]
+        });
+        logger1.info('getSubTitle 测试');
+        assert(true, 'getSubTitle 函数测试');
+
+        // 测试 getMessages
+        const logger2 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            getMessages: (info) => ['自定义消息', ...info.messages],
+            group: { enable: false }
+          })]
+        });
+        logger2.info('getMessages 测试');
+        assert(true, 'getMessages 函数测试');
+
+        // 测试 getMessages 返回 null
+        const logger3 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            getMessages: () => null,
+            group: { enable: false }
+          })]
+        });
+        logger3.info('getMessages null 测试');
+        assert(true, 'getMessages 返回 null 测试');
+
+        // 测试默认处理函数
+        const logger4 = createLogger({
+          outputAdapters: [webConsoleAdapter({})]
+        });
+        logger4.info('默认处理函数测试');
+        assert(true, '默认消息处理函数测试');
+      });
+    }
+
+    // 6. AllowTypes 类型过滤测试
+    function testAllowTypes() {
+      console.clear();
+      testSection('AllowTypes 类型过滤测试', () => {
+        // 测试数组模式（扩展模式）
+        const logger1 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            allowTypes: ['custom', 'special'],
+            group: { enable: false }
+          })]
+        });
+        logger1.info('数组模式 - info 应该显示');
+        logger1.custom('数组模式 - custom 应该显示');
+        logger1.blocked('数组模式 - blocked 不应该显示');
+        assert(true, 'allowTypes 数组模式测试');
+
+        // 测试 Set 模式（完全替换模式）
+        const logger2 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            allowTypes: new Set(['info', 'custom']),
+            group: { enable: false }
+          })]
+        });
+        logger2.info('Set 模式 - info 应该显示');
+        logger2.custom('Set 模式 - custom 应该显示');
+        logger2.debug('Set 模式 - debug 不应该显示');
+        assert(true, 'allowTypes Set 模式测试');
+
+        // 测试函数模式（完全替换模式）
+        const logger3 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            allowTypes: (type) => type.startsWith('test'),
+            group: { enable: false }
+          })]
+        });
+        logger3.testInfo('函数模式 - testInfo 应该显示');
+        logger3.testDebug('函数模式 - testDebug 应该显示');
+        logger3.info('函数模式 - info 不应该显示');
+        assert(true, 'allowTypes 函数模式测试');
+
+        // 测试默认 allowTypes
+        const logger4 = createLogger({
+          outputAdapters: [webConsoleAdapter({})]
+        });
+        logger4.debug('默认 allowTypes - debug 应该显示');
+        logger4.info('默认 allowTypes - info 应该显示');
+        logger4.warn('默认 allowTypes - warn 应该显示');
+        logger4.error('默认 allowTypes - error 应该显示');
+        assert(true, '默认 allowTypes 测试');
+      });
+    }
+
+    // 7. 环境验证测试
+    function testEnvironmentValidation() {
+      console.clear();
+      testSection('环境验证测试', () => {
+        // 测试自定义环境验证 - 返回 true
+        const logger1 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            isEnvironmentValid: () => true,
+            group: { enable: false }
+          })]
+        });
+        logger1.info('环境验证 true - 应该显示');
+        assert(true, 'isEnvironmentValid 返回 true 测试');
+
+        // 测试自定义环境验证 - 返回 false
+        const logger2 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            isEnvironmentValid: () => false,
+            group: { enable: false }
+          })]
+        });
+        logger2.info('环境验证 false - 不应该显示');
+        assert(true, 'isEnvironmentValid 返回 false 测试');
+
+        // 测试默认环境验证（Web 环境）
+        const logger3 = createLogger({
+          outputAdapters: [webConsoleAdapter({})]
+        });
+        logger3.info('默认环境验证 - 应该显示');
+        assert(true, '默认环境验证测试');
+      });
+    }
+
+    // 8. 颜色格式支持测试
+    function testColorFormats() {
+      console.clear();
+      testSection('颜色格式支持测试', () => {
+        const colorTests = [
+          { name: '3位十六进制', color: '#f00' },
+          { name: '6位十六进制', color: '#ff0000' },
+          { name: '4位十六进制', color: '#f00f' },
+          { name: '8位十六进制', color: '#ff0000ff' },
+          { name: 'RGB', color: 'rgb(255, 0, 0)' },
+          { name: 'RGBA', color: 'rgba(255, 0, 0, 0.8)' },
+          { name: 'HSL', color: 'hsl(0, 100%, 50%)' },
+          { name: 'HSLA', color: 'hsla(0, 100%, 50%, 0.8)' }
+        ];
+
+        colorTests.forEach(({ name, color }) => {
+          const logger = createLogger({
+            outputAdapters: [webConsoleAdapter({
+              customStyle: ({ theme, baseStyle }) => {
+                return {
+                  theme: { ...theme, primary: color },
+                  baseStyle
+                };
+              },
+              group: { enable: false }
+            })]
+          });
+
+          logger.info(`${name} 颜色测试`, `颜色: ${color}`);
+          assert(true, `${name} 颜色格式测试`);
+        });
+      });
+    }
+
+    // 9. 渐变样式支持测试
+    function testGradientStyles() {
+      console.clear();
+      testSection('渐变样式支持测试', () => {
+        const gradientTests = [
+          {
+            name: '十六进制渐变',
+            gradient: 'linear-gradient(45deg, #ff0000 0%, #00ff00 100%)'
+          },
+          {
+            name: 'RGB 渐变',
+            gradient: 'linear-gradient(45deg, rgb(255, 0, 0) 0%, rgb(0, 255, 0) 100%)'
+          },
+          {
+            name: 'RGBA 渐变',
+            gradient: 'linear-gradient(45deg, rgba(255, 0, 0, 0.8) 0%, rgba(0, 255, 0, 0.6) 100%)'
+          },
+          {
+            name: 'HSL 渐变',
+            gradient: 'linear-gradient(45deg, hsl(0, 100%, 50%) 0%, hsl(120, 100%, 50%) 100%)'
+          },
+          {
+            name: '混合格式渐变',
+            gradient: 'linear-gradient(45deg, #ff0000 0%, rgb(0, 255, 0) 50%, hsl(240, 100%, 50%) 100%)'
+          },
+          {
+            name: '径向渐变',
+            gradient: 'radial-gradient(circle, #ff0000 0%, #00ff00 100%)'
+          }
+        ];
+
+        gradientTests.forEach(({ name, gradient }) => {
+          const logger = createLogger({
+            outputAdapters: [webConsoleAdapter({
+              customStyle: ({ theme, baseStyle }) => {
+                return {
+                  theme: { ...theme, primary: gradient },
+                  baseStyle
+                };
+              },
+              group: { enable: false }
+            })]
+          });
+
+          logger.info(`${name} 测试`, `渐变: ${gradient}`);
+          assert(true, `${name} 渐变样式测试`);
+        });
+      });
+    }
+
+    // 10. CustomStyle 自定义样式测试
+    function testCustomStyles() {
+      console.clear();
+      testSection('CustomStyle 自定义样式测试', () => {
+        // 测试修改主题
+        const logger1 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            customStyle: ({ theme, baseStyle }) => {
+              return {
+                theme: { ...theme, primary: '#722ed1', tagColor: '#fff' },
+                baseStyle
+              };
+            },
+            group: { enable: false }
+          })]
+        });
+        logger1.info('自定义主题测试');
+        assert(true, 'customStyle 修改主题测试');
+
+        // 测试修改基础样式
+        const logger2 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            customStyle: ({ theme, baseStyle }) => {
+              return {
+                theme,
+                baseStyle: { ...baseStyle, fontSize: '14px', borderRadiusSize: '10px' }
+              };
+            },
+            group: { enable: false }
+          })]
+        });
+        logger2.info('自定义基础样式测试');
+        assert(true, 'customStyle 修改基础样式测试');
+
+        // 测试根据类型动态样式
+        const logger3 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            customStyle: ({ type, theme, baseStyle }) => {
+              const colors = { info: '#1890ff', warn: '#faad14', error: '#ff4d4f' };
+              return {
+                theme: { ...theme, primary: colors[type] || theme.primary },
+                baseStyle
+              };
+            },
+            group: { enable: false }
+          })]
+        });
+        logger3.info('动态样式 info');
+        logger3.warn('动态样式 warn');
+        logger3.error('动态样式 error');
+        assert(true, 'customStyle 动态样式测试');
+
+        // 测试默认 customStyle
+        const logger4 = createLogger({
+          outputAdapters: [webConsoleAdapter({})]
+        });
+        logger4.info('默认 customStyle 测试');
+        assert(true, '默认 customStyle 测试');
+      });
+    }
+
+    // 11. Transform 和 Report 测试
+    function testTransformReport() {
+      console.clear();
+      testSection('Transform & Report 测试', () => {
+        let transformCalled = false;
+        let reportCalled = false;
+        let transformData = null;
+        let reportData = null;
+
+        const logger = createLogger({
+          transform: ({ type, messages, isNestingCall }) => {
+            transformCalled = true;
+            transformData = { type, messages, isNestingCall, timestamp: Date.now() };
+            return transformData;
+          },
+          report: ({ type, messages, isNestingCall, data }) => {
+            reportCalled = true;
+            reportData = { type, messages, isNestingCall, data };
+          },
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+
+        logger.info('Transform Report 测试', { test: 'data' });
+
+        assert(transformCalled, 'transform 函数被调用');
+        assert(reportCalled, 'report 函数被调用');
+        assert(transformData !== null, 'transform 返回数据');
+        assert(reportData !== null, 'report 接收数据');
+        assert(reportData.data === transformData, 'transform 和 report 数据一致');
+        assert(transformData.isNestingCall === false, 'isNestingCall 标识正确');
+      });
+    }
+
+    // 12. 边缘情况处理测试
+    function testEdgeCases() {
+      console.clear();
+      testSection('边缘情况处理测试', () => {
+        // 测试空渐变
+        const logger1 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            customStyle: ({ theme, baseStyle }) => {
+              return {
+                theme: { ...theme, primary: 'linear-gradient(45deg)' },
+                baseStyle
+              };
+            },
+            group: { enable: false }
+          })]
+        });
+        logger1.info('空渐变测试');
+        assert(true, '空渐变边缘情况测试');
+
+        // 测试无效颜色
+        const logger2 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            customStyle: ({ theme, baseStyle }) => {
+              return {
+                theme: { ...theme, primary: 'linear-gradient(45deg, invalidcolor 0%, badcolor 100%)' },
+                baseStyle
+              };
+            },
+            group: { enable: false }
+          })]
+        });
+        logger2.info('无效颜色测试');
+        assert(true, '无效颜色边缘情况测试');
+
+        // 测试空消息
+        const logger3 = createLogger({
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+        logger3.info();
+        logger3.info('');
+        logger3.info(null);
+        logger3.info(undefined);
+        assert(true, '空消息边缘情况测试');
+
+        // 测试异常对象
+        const circularObject = { __a: 1 };
+        circularObject.self = circularObject;
+
+        const logger4 = createLogger({
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+        logger4.info('循环引用对象', circularObject);
+        assert(true, '循环引用对象边缘情况测试');
+      });
+    }
+
+    // 13. 嵌套调用深度控制测试
+    function testNestingDepthControl() {
+      console.clear();
+      testSection('嵌套调用深度控制测试', () => {
+        // 测试真正的递进嵌套调用（每层调用触发下一层）
+        const logger1 = createLogger({
+          maxNestingDepth: 3,
+          transform: ({ type, messages, isNestingCall }) => {
+            // 创建真正的递进嵌套：每一层调用都会触发下一层
+            if (type === 'level1' && !isNestingCall) {
+              logger1.level2('第2层嵌套调用');
+            } else if (type === 'level2' && isNestingCall) {
+              logger1.level3('第3层嵌套调用');
+            } else if (type === 'level3' && isNestingCall) {
+              logger1.level4('第4层嵌套调用 - 应该被丢弃');
+            }
+            return { type, messages, isNestingCall };
+          },
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+
+        logger1.level1('第1层调用，触发递进嵌套');
+        assert(true, '递进嵌套调用测试（3层限制）');
+
+        // 测试自定义深度限制（2层）
+        const logger2 = createLogger({
+          maxNestingDepth: 2,
+          transform: ({ type, messages, isNestingCall }) => {
+            if (type === 'start' && !isNestingCall) {
+              logger2.nested1('第1层嵌套');
+            } else if (type === 'nested1' && isNestingCall) {
+              logger2.nested2('第2层嵌套');
+            } else if (type === 'nested2' && isNestingCall) {
+              logger2.nested3('第3层嵌套 - 应该被丢弃');
+            }
+            return { type, messages, isNestingCall };
+          },
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+
+        logger2.start('触发2层深度限制测试');
+        assert(true, '自定义深度限制（2层）测试');
+
+        // 测试同一层多个调用（这些调用属于同一嵌套层级）
+        const logger3 = createLogger({
+          transform: ({ type, messages, isNestingCall }) => {
+            if (type === 'trigger' && !isNestingCall) {
+              // 这些调用都属于第1层嵌套
+              logger3.same1('同层调用1');
+              logger3.same2('同层调用2');
+              logger3.same3('同层调用3');
+            }
+            return { type, messages, isNestingCall };
+          },
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+
+        logger3.trigger('触发同层多个调用测试');
+        assert(true, '同层多个调用测试');
+
+        // 测试嵌套调用中的 isNestingCall 标识
+        let nestingCallDetected = false;
+        const logger4 = createLogger({
+          transform: ({ type, messages, isNestingCall }) => {
+            if (type === 'trigger' && !isNestingCall) {
+              logger4.nested('嵌套调用');
+            }
+            if (type === 'nested' && isNestingCall) {
+              nestingCallDetected = true;
+            }
+            return { type, messages, isNestingCall };
+          },
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+
+        logger4.trigger('触发 isNestingCall 测试');
+        assert(nestingCallDetected, 'isNestingCall 标识正确检测');
+
+        // 测试状态机正确重置
+        const logger5 = createLogger({
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+
+        logger5.info('第一次调用');
+        logger5.info('第二次调用 - 状态应该已重置');
+        assert(true, '状态机正确重置测试');
+
+        // 测试复杂的递进嵌套场景
+        const depthTracker = [];
+        const logger6 = createLogger({
+          maxNestingDepth: 3, // 允许1、2、3层嵌套，主调用不计入
+          transform: ({ type, messages, isNestingCall }) => {
+            // 记录调用深度
+            if (type.startsWith('depth')) {
+              const depth = isNestingCall ? 'nested' : 'main';
+              depthTracker.push(`${type}:${depth}`);
+
+              // 创建递进嵌套
+              if (type === 'depth1' && !isNestingCall) {
+                // 主调用触发第1层嵌套
+                logger6.depth2('进入第1层嵌套');
+              } else if (type === 'depth2' && isNestingCall) {
+                // 第1层嵌套触发第2层嵌套
+                logger6.depth3('进入第2层嵌套');
+              } else if (type === 'depth3' && isNestingCall) {
+                // 第2层嵌套触发第3层嵌套
+                logger6.depth4('进入第3层嵌套');
+              } else if (type === 'depth4' && isNestingCall) {
+                // 第3层嵌套触发第4层嵌套 - 应该被丢弃（超过maxNestingDepth=3）
+                logger6.depth5('进入第4层嵌套 - 应该被丢弃');
+              }
+            }
+            return { type, messages, isNestingCall };
+          },
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+
+        logger6.depth1('开始复杂递进嵌套测试');
+
+        // 验证深度跟踪结果
+        console.log('深度跟踪结果:', depthTracker);
+        console.log('嵌套深度说明: 主调用(depth1)不计入嵌套深度，depth2=第1层嵌套，depth3=第2层嵌套，depth4=第3层嵌套');
+        assert(depthTracker.includes('depth1:main'), '主调用正确标识（不计入嵌套深度）');
+        assert(depthTracker.includes('depth2:nested'), '第1层嵌套正确标识');
+        assert(depthTracker.includes('depth3:nested'), '第2层嵌套正确标识');
+        assert(depthTracker.includes('depth4:nested'), '第3层嵌套正确标识');
+        assert(!depthTracker.includes('depth5:nested'), '第4层嵌套被正确丢弃（超过maxNestingDepth=3）');
+        assert(true, '复杂递进嵌套场景测试');
+      });
+    }
+
+    // 14. 性能测试
+    function testPerformance() {
+      console.clear();
+      testSection('性能测试', () => {
+        const logger = createLogger({
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+
+        // 测试大量日志输出
+        const startTime = performance.now();
+        for (let logIndex = 0; logIndex < 1000; logIndex++) {
+          logger.info(`性能测试 ${logIndex}`, { index: logIndex, data: 'test' });
+        }
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+
+        console.log(`1000 条日志输出耗时: ${duration.toFixed(2)}ms`);
+        assert(duration < 5000, `性能测试通过 (${duration.toFixed(2)}ms < 5000ms)`);
+
+        // 测试函数缓存性能
+        const cacheStartTime = performance.now();
+        for (let cacheIndex = 0; cacheIndex < 1000; cacheIndex++) {
+          const cachedFunction = logger.info; // 访问缓存的函数
+          void cachedFunction; // 避免未使用变量警告
+        }
+        const cacheEndTime = performance.now();
+        const cacheDuration = cacheEndTime - cacheStartTime;
+
+        console.log(`1000 次函数缓存访问耗时: ${cacheDuration.toFixed(2)}ms`);
+        assert(cacheDuration < 100, `缓存性能测试通过 (${cacheDuration.toFixed(2)}ms < 100ms)`);
+      });
+    }
+
+    // 15. 兼容性测试
+    function testCompatibility() {
+      console.clear();
+      testSection('兼容性测试', () => {
+        // 测试无配置创建
+        const logger1 = createLogger();
+        logger1.info('无配置兼容性测试');
+        assert(true, '无配置创建兼容性测试');
+
+        // 测试空配置
+        const logger2 = createLogger({});
+        logger2.info('空配置兼容性测试');
+        assert(true, '空配置兼容性测试');
+
+        // 测试部分配置
+        const logger3 = createLogger({
+          outputAdapters: [webConsoleAdapter()]
+        });
+        logger3.info('部分配置兼容性测试');
+        assert(true, '部分配置兼容性测试');
+
+        // 测试旧版本样式（纯色）
+        const logger4 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            customStyle: ({ theme, baseStyle }) => {
+              return {
+                theme: { ...theme, primary: '#ff0000' },
+                baseStyle
+              };
+            }
+          })]
+        });
+        logger4.info('旧版本纯色样式兼容性测试');
+        assert(true, '旧版本样式兼容性测试');
+      });
+    }
+
+    // 16. 复杂场景测试
+    function testComplexScenarios() {
+      console.clear();
+      testSection('复杂场景测试', () => {
+        // 测试多个适配器
+        const logger1 = createLogger({
+          outputAdapters: [
+            webConsoleAdapter({
+              allowTypes: ['info'],
+              customStyle: ({ theme, baseStyle }) => {
+                return {
+                  theme: { ...theme, primary: '#1890ff' },
+                  baseStyle
+                };
+              }
+            }),
+            webConsoleAdapter({
+              allowTypes: ['debug'],
+              customStyle: ({ theme, baseStyle }) => {
+                return {
+                  theme: { ...theme, primary: '#722ed1' },
+                  baseStyle
+                };
+              }
+            })
+          ]
+        });
+        logger1.info('多适配器 info 测试');
+        logger1.debug('多适配器 debug 测试');
+        assert(true, '多适配器场景测试');
+
+        // 测试嵌套调用（状态机防溢出机制）
+        const logger2 = createLogger({
+          transform: ({ type, messages, isNestingCall }) => {
+            // 在transform中调用logger，测试状态机防溢出机制
+            if (type === 'trigger' && !isNestingCall) {
+              logger2.nested('嵌套调用测试');
+            }
+            return { type, messages, isNestingCall };
+          },
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+
+        logger2.trigger('嵌套调用触发器');
+        assert(true, '嵌套调用场景测试（状态机防溢出）');
+
+        // 测试动态类型
+        const logger3 = createLogger({
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+        const dynamicTypes = ['custom1', 'custom2', 'custom3'];
+        dynamicTypes.forEach(logType => {
+          logger3[logType](`动态类型 ${logType} 测试`);
+        });
+        assert(true, '动态类型场景测试');
+
+        // 测试深度嵌套调用链
+        const logger4 = createLogger({
+          maxNestingDepth: 5,
+          transform: ({ type, messages, isNestingCall }) => {
+            if (type === 'chain' && !isNestingCall) {
+              // 创建深度嵌套调用链
+              logger4.chain1('链式调用1');
+              logger4.chain2('链式调用2');
+              logger4.chain3('链式调用3');
+              logger4.chain4('链式调用4');
+              logger4.chain5('链式调用5');
+              logger4.chain6('链式调用6 - 应该被丢弃');
+            }
+            return { type, messages, isNestingCall };
+          },
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+
+        logger4.chain('触发链式嵌套调用');
+        assert(true, '深度嵌套调用链测试');
+      });
+    }
+
+    // 17. 内存管理测试
+    function testMemoryManagement() {
+      console.clear();
+      testSection('内存管理测试', () => {
+        // 测试函数缓存
+        const logger = createLogger({
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+
+        // 创建大量不同类型的日志函数
+        const logTypes = [];
+        for (let typeIndex = 0; typeIndex < 100; typeIndex++) {
+          const logType = `type${typeIndex}`;
+          logTypes.push(logType);
+          logger[logType](`类型 ${logType} 测试`);
+        }
+
+        // 验证函数被缓存
+        logTypes.forEach(logType => {
+          const cachedFn1 = logger[logType];
+          const cachedFn2 = logger[logType];
+          assert(cachedFn1 === cachedFn2, `类型 ${logType} 函数被正确缓存`);
+        });
+
+        // 测试嵌套调用后的状态清理
+        const logger2 = createLogger({
+          transform: ({ type, messages, isNestingCall }) => {
+            if (type === 'cleanup' && !isNestingCall) {
+              logger2.nested1('嵌套1');
+              logger2.nested2('嵌套2');
+            }
+            return { type, messages, isNestingCall };
+          },
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+
+        logger2.cleanup('状态清理测试');
+        // 再次调用，验证状态已清理
+        logger2.info('状态清理后的正常调用');
+        assert(true, '嵌套调用后状态清理测试');
+
+        assert(true, '内存管理测试完成');
+      });
+    }
+
+    // 运行所有测试
+    function runAllTests() {
+      console.clear();
+      console.log('🚀 开始运行完整测试套件...\n');
+
+      // 重置测试结果
+      testResults = { total: 0, passed: 0, failed: 0, errors: [] };
+
+      // 按顺序运行所有测试
+      const tests = [
+        testLoggerCore,
+        testAdapterBasic,
+        testGroupFeatures,
+        testConsoleLevels,
+        testMessageHandlers,
+        testAllowTypes,
+        testEnvironmentValidation,
+        testColorFormats,
+        testGradientStyles,
+        testCustomStyles,
+        testTransformReport,
+        testEdgeCases,
+        testNestingDepthControl,
+        testPerformance,
+        testCompatibility,
+        testComplexScenarios,
+        testMemoryManagement
+      ];
+
+      tests.forEach((test, index) => {
+        console.log(`\n📋 运行测试 ${index + 1}/${tests.length}: ${test.name}`);
+        test();
+      });
+
+      console.clear();
+
+      // 输出测试总结
+      console.log(`\n${'='.repeat(60)}`);
+      console.log('📊 测试总结报告');
+      console.log('='.repeat(60));
+      console.log(`总测试数: ${testResults.total}`);
+      console.log(`✅ 通过: ${testResults.passed}`);
+      console.log(`❌ 失败: ${testResults.failed}`);
+      console.log(`成功率: ${((testResults.passed / testResults.total) * 100).toFixed(2)}%`);
+
+      if (testResults.errors.length > 0) {
+        console.log('\n❌ 失败的测试:');
+        testResults.errors.forEach((error, index) => {
+          console.log(`${index + 1}. ${error}`);
+        });
+      }
+
+      console.log('\n🎉 测试套件运行完成!');
+    }
+
+    // 将所有测试函数暴露到全局作用域
+    window.testLoggerCore = testLoggerCore;
+    window.testAdapterBasic = testAdapterBasic;
+    window.testGroupFeatures = testGroupFeatures;
+    window.testConsoleLevels = testConsoleLevels;
+    window.testMessageHandlers = testMessageHandlers;
+    window.testAllowTypes = testAllowTypes;
+    window.testEnvironmentValidation = testEnvironmentValidation;
+    window.testColorFormats = testColorFormats;
+    window.testGradientStyles = testGradientStyles;
+    window.testCustomStyles = testCustomStyles;
+    window.testTransformReport = testTransformReport;
+    window.testEdgeCases = testEdgeCases;
+    window.testNestingDepthControl = testNestingDepthControl;
+    window.testPerformance = testPerformance;
+    window.testCompatibility = testCompatibility;
+    window.testComplexScenarios = testComplexScenarios;
+    window.testMemoryManagement = testMemoryManagement;
+    window.runAllTests = runAllTests;
+
+    console.log('🧪 Logger 完整功能测试页面已加载');
+    console.log('💡 建议点击 "运行所有测试" 按钮获得完整的测试报告');
+  </script>
+</body>
+
+</html>

@@ -12,4 +12,5 @@ export default defineConfig({
     { format: 'esm', syntax: ['node 18'], dts: true },
     { format: 'cjs', syntax: ['node 18'] },
   ],
+  output: { minify: true },
 });

@@ -5,7 +5,7 @@ import { createLogger } from '../src';
 import { webConsoleAdapter } from '../src/adapters/web';
 
 const logger = createLogger({
-  transform(type: string, messages: any[]) {
+  transform({ type, messages }) {
     const [point, params, ...otherMessages] = messages;
 
     return {
@@ -15,7 +15,8 @@ const logger = createLogger({
       messages: otherMessages,
     };
   },
-  report({ type, point, params, messages }) {
+  report({ data }) {
+    const { type, point, params, messages } = data;
     console.log(type, point, params, messages);
   },
   outputAdapters: [
@@ -24,7 +25,12 @@ const logger = createLogger({
         console.log('log,log', info);
       },
     },
-    webConsoleAdapter({
+    webConsoleAdapter<{
+      type: string;
+      point: string;
+      params: any;
+      messages: any[];
+    }>({
       group: {
         enable: false,
         collapsed: false,

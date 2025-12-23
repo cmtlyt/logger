@@ -487,11 +487,12 @@
   },
   "overrides": [
     {
-      "includes": ["**/tests/**"],
+      "includes": ["**/example/**"],
       "linter": {
         "rules": {
           "complexity": {
-            "noExcessiveLinesPerFunction": "off"
+            "noExcessiveLinesPerFunction": "off",
+            "noExcessiveCognitiveComplexity": "off"
           },
           "correctness": {
             "noPrivateImports": "off"

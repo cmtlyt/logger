@@ -1,90 +1,8 @@
-import type { OuputInfo, OutputFunc } from '../../types';
-import { defineAdapter, isWeb, objectStringify } from '../utils';
-
-type Theme = { primary: string; tagColor: string; titleColor: string };
-
-const THEME_MAP: Record<string, Theme> = {
-  debug: { primary: '#eb2f96', tagColor: '#fff', titleColor: '#a7a7a7' },
-  info: { primary: '#d9d9d9', tagColor: '#000', titleColor: '#a7a7a7' },
-  warn: { primary: '#fa8c16', tagColor: '#fff', titleColor: '#a7a7a7' },
-  error: { primary: '#f5222d', tagColor: '#fff', titleColor: '#a7a7a7' },
-};
-
-const BASE_STYLE_MAP = {
-  borderRadiusSize: '6px',
-  paddingBlock: '4px',
-  paddingInline: '8px',
-  lineWidth: '2px',
-  fontSize: '10px',
-};
-
-function getSpace(fontSize: string) {
-  const fs = Number.parseFloat(fontSize);
-  const width = Math.floor((globalThis.window.outerWidth / fs) * 1.12);
-  return ' '.repeat(width);
-}
-
-function getType(_v: any): string {
-  return Object.prototype.toString.call(_v).slice(8, -1).toLowerCase();
-}
-
-function createContentMessage(messages: string[], fontSize: string) {
-  const sliceMessages: any[] = [];
-  const temp: any[] = [];
-  const baseType = new Set(['string', 'number', 'boolean', 'undefined', 'symbol', 'null']);
-
-  for (let i = 0; i < messages.length; ++i) {
-    const msg = messages[i];
-    const msgType = getType(msg);
-    if (baseType.has(msgType)) {
-      temp.push(String(msg));
-    } else {
-      sliceMessages.push(temp.join(' '), objectStringify(msg));
-      temp.length = 0;
-    }
-  }
-  sliceMessages.push(temp.join(' '));
-  temp.length = 0;
-
-  const space = getSpace(fontSize);
-
-  return sliceMessages.flatMap((msg) => msg.split('\n')).join(space);
-}
-
-function asignStyle(theme: Theme, info: ReturnType<WebConsoleAdapterCtx['options']['customStyle']>) {
-  return {
-    theme: { ...theme, ...info.theme },
-    baseStyle: { ...BASE_STYLE_MAP, ...info.baseStyle },
-  };
-}
-
-function messageTransform(type: string, title: string, messages: any[], ctx: WebConsoleAdapterCtx) {
-  const defaultTheme = THEME_MAP[type] || THEME_MAP.debug;
-
-  const { group, customStyle } = ctx.options;
-
-  const { theme, baseStyle } = asignStyle(
-    defaultTheme,
-    customStyle({ type, theme: { ...defaultTheme }, baseStyle: { ...BASE_STYLE_MAP } }),
-  );
-
-  const contentMessage = createContentMessage(messages, baseStyle.fontSize);
-
-  const baseStyles = `margin-left:${group.enable ? '-16px' : '0'};padding:${baseStyle.paddingBlock} ${baseStyle.paddingInline};font-size:${baseStyle.fontSize};`;
-  const hasTitle = title !== type && !group.enable;
-
-  return {
-    message: `%c${type}${hasTitle ? `%c(${title})` : ''}%c\n%c${contentMessage.padEnd(type.length, ' ')}`,
-    styles: [
-      `${baseStyles}background:${theme.primary};color:${theme.tagColor};border-radius:${baseStyle.borderRadiusSize} ${baseStyle.borderRadiusSize} 0 0;text-transform:uppercase;`,
-      ...(hasTitle
-        ? [`${baseStyles}margin-left:${baseStyle.lineWidth};padding-inline:0;color:${theme.titleColor};`]
-        : []),
-      'font-size:0;line-height:0;',
-      `${baseStyles}display:inline-block;margin-top:-${baseStyle.lineWidth};background:#fff;border:${baseStyle.lineWidth} solid ${theme.primary};border-radius: 0 ${baseStyle.borderRadiusSize} ${baseStyle.borderRadiusSize};`,
-    ],
-  };
-}
+import type { OutputFunc } from '@/types';
+import { defineAdapter, isWeb } from '../utils';
+import { createAllowTypesChecker, isTypeAllowed } from './allow-types-checker';
+import { messageTransform } from './style-utils';
+import type { WebConsoleAdapterCtx, WebConsoleAdapterOptions } from './types';
 
 function getAdapter(ctx: WebConsoleAdapterCtx): OutputFunc {
   const { group: groupInfo, consoleLevel, getSubTitle, getMessages } = ctx.options;
@@ -105,33 +23,6 @@ function getAdapter(ctx: WebConsoleAdapterCtx): OutputFunc {
   };
 }
 
-interface WebConsoleAdapterOptions {
-  group?: {
-    enable?: boolean;
-    collapsed?: boolean;
-  };
-  consoleLevel?: 'debug' | 'info' | 'log' | 'warn';
-  getSubTitle?: (info: OuputInfo) => string;
-  getMessages?: (info: OuputInfo) => any[] | null;
-  customStyle?: (info: { type: string; theme: Theme; baseStyle: typeof BASE_STYLE_MAP }) => {
-    theme: Theme;
-    baseStyle: typeof BASE_STYLE_MAP;
-  };
-}
-
-interface WebConsoleAdapterCtx {
-  options: {
-    group: Required<NonNullable<WebConsoleAdapterOptions['group']>>;
-    consoleLevel: NonNullable<WebConsoleAdapterOptions['consoleLevel']>;
-    getSubTitle: (info: OuputInfo) => string;
-    getMessages: (info: OuputInfo) => any[] | null;
-    customStyle: (info: { type: string; theme: Theme; baseStyle: typeof BASE_STYLE_MAP }) => {
-      theme: Theme;
-      baseStyle: typeof BASE_STYLE_MAP;
-    };
-  };
-}
-
 function normalizeOptions(options: WebConsoleAdapterOptions): WebConsoleAdapterCtx['options'] {
   const group = options.group || {};
   return {
@@ -140,25 +31,57 @@ function normalizeOptions(options: WebConsoleAdapterOptions): WebConsoleAdapterC
       collapsed: group.collapsed !== false,
     },
     consoleLevel: options.consoleLevel || 'log',
+    allowTypes: options.allowTypes || [],
     getSubTitle: options.getSubTitle || (() => ''),
     getMessages: options.getMessages || (() => null),
     customStyle: options.customStyle || ((info) => info),
+    isEnvironmentValid: options.isEnvironmentValid || isWeb,
   };
 }
 
-export const webConsoleAdapter = defineAdapter((options?: WebConsoleAdapterOptions) => {
-  const allowTypes = new Set(['debug', 'info', 'warn', 'error']);
+/**
+ * Web控制台适配器，用于在浏览器控制台中输出格式化的日志信息
+ *
+ * 支持的功能：
+ * - 彩色主题和样式自定义
+ * - 分组显示和折叠控制
+ * - 多种控制台输出级别
+ * - 类型过滤和环境检测
+ * - 自定义消息格式化
+ *
+ * @template T 数据类型
+ * @param options 配置选项，可选
+ * @returns 适配器函数
+ *
+ * @example
+ * ```typescript
+ * // 基础用法
+ * const adapter = webConsoleAdapter();
+ *
+ * // 自定义配置
+ * const adapter = webConsoleAdapter({
+ *   group: { enable: true, collapsed: false },
+ *   consoleLevel: 'info',
+ *   allowTypes: ['info', 'warn', 'error']
+ * });
+ * ```
+ */
+export const webConsoleAdapter = defineAdapter(<T>(options?: WebConsoleAdapterOptions<T>) => {
   const ctx: WebConsoleAdapterCtx = { options: normalizeOptions(options || {}) };
+  const allowTypesChecker = createAllowTypesChecker(ctx.options.allowTypes);
+  const environmentValidator = ctx.options.isEnvironmentValid;
 
   return (type) => {
-    if (!isWeb()) {
+    if (!environmentValidator()) {
       return null;
     }
 
-    if (!allowTypes.has(type)) {
+    if (!isTypeAllowed(type, allowTypesChecker)) {
       return null;
     }
 
     return getAdapter(ctx);
   };
 });
+
+export type { WebConsoleAdapterOptions } from './types';
