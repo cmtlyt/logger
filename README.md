@@ -12,7 +12,6 @@
 - 🔌 **Plugin Adapters** - Supports custom output adapters for flexible extension
 - 🎨 **Web Adapter with Beautified Output** - Built-in adapter that provides beautiful browser console styling with customizable themes
 - 🛡️ **Nested Call Protection** - Advanced state machine to prevent stack overflow with configurable depth limits
-- 🔒 **Code Obfuscation** - Built-in code obfuscation support for production builds
 - 📦 **Lightweight** - No external dependencies, small footprint
 - 🛠️ **TypeScript Support** - Complete type definition support with comprehensive JSDoc documentation
 - 🎯 **Environment Detection** - Automatic environment detection and validation
@@ -296,13 +295,6 @@ const logger = createLogger({
 ```
 
 See [example file](./example/index.ts) for more comprehensive usage examples.
-
-## Browser Compatibility
-
-- Chrome 60+
-- Firefox 55+
-- Safari 12+
-- Edge 79+
 
 ## Contributing
 
