@@ -1,16 +1,24 @@
 import { objectStringify } from '../utils';
+import type { WebConsoleAdapterCtx } from './types';
 
-function getSpace(fontSize: string) {
+function getSpace(fontSize: string, ctx: WebConsoleAdapterCtx) {
   const fs = Number.parseFloat(fontSize);
-  const width = Math.floor((globalThis.window.outerWidth / fs) * 1.12);
-  return ' '.repeat(width);
+  let width = ctx.options.getWindowWidth();
+
+  // 处理特殊数值：Infinity、-Infinity、NaN
+  if (!Number.isFinite(width) || width <= 0) {
+    width = 2048;
+  }
+
+  const spaceWidth = Math.min(1000, Math.floor((width / fs) * 1.12));
+  return ' '.repeat(spaceWidth);
 }
 
 function getType(_v: any): string {
   return Object.prototype.toString.call(_v).slice(8, -1).toLowerCase();
 }
 
-export function createContentMessage(messages: string[], fontSize: string) {
+export function createContentMessage(messages: string[], fontSize: string, ctx: WebConsoleAdapterCtx) {
   const sliceMessages: any[] = [];
   const temp: any[] = [];
   const baseType = new Set(['string', 'number', 'boolean', 'undefined', 'symbol', 'null']);
@@ -28,7 +36,7 @@ export function createContentMessage(messages: string[], fontSize: string) {
   sliceMessages.push(temp.join(' '));
   temp.length = 0;
 
-  const space = getSpace(fontSize);
+  const space = getSpace(fontSize, ctx);
 
   return sliceMessages.flatMap((msg) => msg.split('\n')).join(space);
 }

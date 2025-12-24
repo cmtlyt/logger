@@ -36,6 +36,7 @@ function normalizeOptions(options: WebConsoleAdapterOptions): WebConsoleAdapterC
     getMessages: options.getMessages || (() => null),
     customStyle: options.customStyle || ((info) => info),
     isEnvironmentValid: options.isEnvironmentValid || isWeb,
+    getWindowWidth: options.getWindowWidth || (() => (isWeb() ? window.outerWidth : 500)),
   };
 }
 

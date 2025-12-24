@@ -52,7 +52,7 @@ export function messageTransform(type: string, title: string, messages: any[], c
     customStyle({ type, theme: { ...defaultTheme }, baseStyle: { ...BASE_STYLE_MAP } }),
   );
 
-  const contentMessage = createContentMessage(messages, baseStyle.fontSize);
+  const contentMessage = createContentMessage(messages, baseStyle.fontSize, ctx);
 
   const baseStyles = `margin-left:${group.enable ? '-16px' : '0'};padding:${baseStyle.paddingBlock} ${baseStyle.paddingInline};font-size:${baseStyle.fontSize};`;
   const hasTitle = title !== type && !group.enable;

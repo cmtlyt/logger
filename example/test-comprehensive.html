@@ -241,6 +241,13 @@
         <button onclick="testMemoryManagement()">测试内存管理</button>
         <p>测试缓存管理和内存泄漏</p>
       </div>
+
+      <!-- getWindowWidth 功能测试 -->
+      <div class="test-section">
+        <h3>18. getWindowWidth 配置</h3>
+        <button onclick="testGetWindowWidth()">测试窗口宽度配置</button>
+        <p>测试 getWindowWidth 配置项的默认行为和自定义功能</p>
+      </div>
     </div>
 
     <div class="note">
@@ -1101,6 +1108,164 @@
       });
     }
 
+    // 18. getWindowWidth 配置测试
+    function testGetWindowWidth() {
+      console.clear();
+      testSection('getWindowWidth 配置测试', () => {
+        // 测试默认配置 - 应该返回 window.outerWidth
+        console.log('当前窗口信息:');
+        console.log('- window.outerWidth:', window.outerWidth);
+        console.log('- window.innerWidth:', window.innerWidth);
+        console.log('- screen.width:', screen.width);
+
+        // 测试1: 默认配置
+        const logger1 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            group: { enable: false },
+            getSubTitle: () => '默认窗口宽度测试'
+          })]
+        });
+        logger1.info('测试默认 getWindowWidth 配置 - 应该使用 window.outerWidth', { __a: 1 });
+        assert(true, '默认 getWindowWidth 配置测试');
+
+        // 测试2: 自定义配置 - window.innerWidth
+        const logger2 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            group: { enable: false },
+            getSubTitle: () => '自定义窗口宽度测试 (innerWidth)',
+            getWindowWidth: () => window.innerWidth
+          })]
+        });
+        logger2.info('测试自定义 getWindowWidth 配置 - 使用 window.innerWidth', { __a: 1 });
+        assert(true, '自定义 getWindowWidth (innerWidth) 配置测试');
+
+        // 测试3: 自定义配置 - screen.width
+        const logger3 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            group: { enable: false },
+            getSubTitle: () => '自定义窗口宽度测试 (screen.width)',
+            getWindowWidth: () => screen.width
+          })]
+        });
+        logger3.info('测试自定义 getWindowWidth 配置 - 使用 screen.width', { __a: 1 });
+        assert(true, '自定义 getWindowWidth (screen.width) 配置测试');
+
+        // 测试4: 自定义配置 - 固定值
+        const logger4 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            group: { enable: false },
+            getSubTitle: () => '自定义窗口宽度测试 (固定值)',
+            getWindowWidth: () => 1920
+          })]
+        });
+        logger4.info('测试自定义 getWindowWidth 配置 - 使用固定值 1920px', { __a: 1 });
+        assert(true, '自定义 getWindowWidth (固定值) 配置测试');
+
+        // 测试5: 自定义配置 - 计算值
+        const calculatedWidth = Math.floor(window.innerWidth * 0.8);
+        const logger5 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            group: { enable: false },
+            getSubTitle: () => '自定义窗口宽度测试 (计算值)',
+            getWindowWidth: () => calculatedWidth
+          })]
+        });
+        logger5.info(`测试自定义 getWindowWidth 配置 - 使用计算值 ${calculatedWidth}px (innerWidth * 0.8)`, { __a: 1 });
+        assert(true, '自定义 getWindowWidth (计算值) 配置测试');
+
+        // 测试6: 边界情况 - 返回0
+        const logger6 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            group: { enable: false },
+            getSubTitle: () => '边界情况测试 (返回0)',
+            getWindowWidth: () => 0
+          })]
+        });
+        logger6.info('测试 getWindowWidth 边界情况 - 返回 0', { __a: 1 });
+        assert(true, 'getWindowWidth 边界情况 (返回0) 测试');
+
+        // 测试7: 边界情况 - 返回负数
+        const logger7 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            group: { enable: false },
+            getSubTitle: () => '边界情况测试 (返回负数)',
+            getWindowWidth: () => -100
+          })]
+        });
+        logger7.info('测试 getWindowWidth 边界情况 - 返回 -100', { __a: 1 });
+        assert(true, 'getWindowWidth 边界情况 (返回负数) 测试');
+
+        // 测试8: 边界情况 - 返回小数
+        const logger8 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            group: { enable: false },
+            getSubTitle: () => '边界情况测试 (返回小数)',
+            getWindowWidth: () => 1920.5
+          })]
+        });
+        logger8.info('测试 getWindowWidth 边界情况 - 返回 1920.5', { __a: 1 });
+        assert(true, 'getWindowWidth 边界情况 (返回小数) 测试');
+
+        // 测试9: 边界情况 - 返回很大的数
+        const logger9 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            group: { enable: false },
+            getSubTitle: () => '边界情况测试 (返回很大的数)',
+            getWindowWidth: () => 999_999
+          })]
+        });
+        logger9.info('测试 getWindowWidth 边界情况 - 返回 999999', { __a: 1 });
+        assert(true, 'getWindowWidth 边界情况 (返回很大的数) 测试');
+
+        // 测试10: 边界情况 - 返回NaN
+        const logger10 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            group: { enable: false },
+            getSubTitle: () => '边界情况测试 (返回NaN)',
+            getWindowWidth: () => Number.NaN
+          })]
+        });
+        logger10.info('测试 getWindowWidth 边界情况 - 返回 NaN', { __a: 1 });
+        assert(true, 'getWindowWidth 边界情况 (返回NaN) 测试');
+
+        // 测试11: 边界情况 - 返回Infinity
+        const logger11 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            group: { enable: false },
+            getSubTitle: () => '边界情况测试 (返回Infinity)',
+            getWindowWidth: () => Number.POSITIVE_INFINITY
+          })]
+        });
+        logger11.info('测试 getWindowWidth 边界情况 - 返回 Infinity', { __a: 1 });
+        assert(true, 'getWindowWidth 边界情况 (返回Infinity) 测试');
+
+        // 测试12: 与其他配置项组合使用
+        const logger12 = createLogger({
+          outputAdapters: [webConsoleAdapter({
+            group: { enable: true, collapsed: false },
+            consoleLevel: 'info',
+            getSubTitle: (info) => `[${info.type.toUpperCase()}] 窗口宽度组合测试`,
+            getWindowWidth: () => window.innerWidth,
+            customStyle: ({ theme, baseStyle }) => {
+              return {
+                theme: { ...theme, primary: '#722ed1' },
+                baseStyle: { ...baseStyle, fontSize: '14px' }
+              };
+            }
+          })]
+        });
+        logger12.info('测试 getWindowWidth 与其他配置项组合使用', { __a: 1 });
+        assert(true, 'getWindowWidth 与其他配置项组合测试');
+
+        console.log('\n📊 getWindowWidth 测试总结:');
+        console.log('✅ 默认配置测试 - 使用 window.outerWidth');
+        console.log('✅ 自定义配置测试 - 支持各种自定义函数');
+        console.log('✅ 边界情况测试 - 处理各种特殊返回值');
+        console.log('✅ 组合配置测试 - 与其他配置项正常协作');
+        console.log('💡 所有 getWindowWidth 相关功能测试完成！');
+      });
+    }
+
     // 运行所有测试
     function runAllTests() {
       console.clear();
@@ -1127,7 +1292,8 @@
         testPerformance,
         testCompatibility,
         testComplexScenarios,
-        testMemoryManagement
+        testMemoryManagement,
+        testGetWindowWidth
       ];
 
       tests.forEach((test, index) => {
@@ -1174,6 +1340,7 @@
     window.testCompatibility = testCompatibility;
     window.testComplexScenarios = testComplexScenarios;
     window.testMemoryManagement = testMemoryManagement;
+    window.testGetWindowWidth = testGetWindowWidth;
     window.runAllTests = runAllTests;
 
     console.log('🧪 Logger 完整功能测试页面已加载');

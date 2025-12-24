@@ -95,6 +95,13 @@ export interface WebConsoleAdapterOptions<T = any> {
    * @default () => typeof window !== 'undefined' && typeof console !== 'undefined'
    */
   isEnvironmentValid?: () => boolean;
+
+  /**
+   * 获取窗口宽度的函数，用于自定义窗口宽度的获取方式
+   * @returns 窗口宽度数值
+   * @default () => window.outerWidth
+   */
+  getWindowWidth?: () => number;
 }
 
 /**
