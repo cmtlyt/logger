@@ -495,7 +495,8 @@
             "noExcessiveCognitiveComplexity": "off"
           },
           "correctness": {
-            "noPrivateImports": "off"
+            "noPrivateImports": "off",
+            "noProcessGlobal": "off"
           },
           "suspicious": {
             "noEmptyBlockStatements": "off",

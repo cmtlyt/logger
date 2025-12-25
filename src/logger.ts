@@ -31,6 +31,19 @@ function createLogCtrl() {
         const info = { type: _type, messages, isNestingCall: depth > 0 };
         const data = options.transform(info) || {};
         options.report({ ...info, data });
+
+        // 检查是否启用输出（支持函数形式的动态控制）
+        let shouldOutput = true;
+        try {
+          shouldOutput = options.enableOutput({ ...info, data });
+        } catch (error) {
+          console.error(error);
+          shouldOutput = true;
+        }
+
+        if (!shouldOutput) {
+          return;
+        }
         return outputFunc({ type: _type, messages, transformData: data });
       };
 
@@ -39,9 +52,16 @@ function createLogCtrl() {
         if (status & (STATUS.processing | STATUS.skiping)) {
           // 如果正在跳过, 则发出警告
           if (status & STATUS.skiping) {
-            console.warn(
-              `最大嵌套深度 ${maxNestingDepth} 已达到, 跳过调用, 请检查是否在 transform 和 report 中存在 logger 调用, 如果存在的话可以通过参数中的 isNestingCall 参数判断是否为嵌套调用`,
-            );
+            getOutputFunc(
+              'warn',
+              options.outputAdapters,
+            )({
+              type: 'warn',
+              messages: [
+                `最大嵌套深度 ${maxNestingDepth} 已达到, 跳过调用, 请检查是否在 transform 和 report 中存在 logger 调用, 如果存在的话可以通过参数中的 isNestingCall 参数判断是否为嵌套调用`,
+              ],
+              transformData: {},
+            });
             return;
           }
           nestingCallsSet.add((depth) => processLog(messages, depth));
@@ -80,6 +100,7 @@ function createLogCtrl() {
  *
  * @template T Transform 函数返回的数据类型
  * @param options Logger 配置选项
+ * @param options.enableOutput 是否启用日志输出，默认为true，设置为false时仍执行transform和report但不输出
  * @param options.transform 数据转换函数，用于处理原始日志数据
  * @param options.report 数据上报函数，用于处理转换后的数据
  * @param options.maxNestingDepth 最大嵌套深度，默认为3，主调用不计入深度
@@ -94,8 +115,22 @@ function createLogCtrl() {
  * logger.debug('Debug message');
  * logger.customType('Custom log type');
  *
+ * // 禁用日志输出但保留数据处理
+ * const disabledOutputLogger = createLogger({ enableOutput: false });
+ * disabledOutputLogger.info('这条日志不会输出但transform和report仍会执行');
+ *
+ * // 使用函数动态控制输出
+ * const conditionalLogger = createLogger({
+ *   enableOutput: ({ type, data }) => {
+ *     // 只在生产环境输出error级别的日志
+ *     return process.env.NODE_ENV === 'production' ? type === 'error' : true;
+ *   },
+ *   transform: ({ type, messages }) => ({ type, messages, timestamp: Date.now() })
+ * });
+ *
  * // 带配置的用法
  * const logger = createLogger({
+ *   enableOutput: true,
  *   transform: ({ type, messages, isNestingCall }) => {
  *     return { type, messages, timestamp: Date.now(), isNesting: isNestingCall };
  *   },

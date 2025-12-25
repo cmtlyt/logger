@@ -1,5 +1,17 @@
 import type { LoggerCtx, LoggerOptions } from './types';
 
+function normalizeEnableOutput<T>(
+  enableOutput: LoggerOptions<T>['enableOutput'],
+): LoggerCtx<T>['options']['enableOutput'] {
+  if (enableOutput == null) {
+    return () => true;
+  }
+  if (typeof enableOutput === 'function') {
+    return enableOutput;
+  }
+  return () => enableOutput;
+}
+
 /**
  * 规范化Logger配置选项，将用户输入转换为内部使用的标准格式
  *
@@ -40,6 +52,7 @@ export function normalizeOptions<T>(options: LoggerOptions<T>): LoggerCtx<T>['op
   }
 
   return {
+    enableOutput: normalizeEnableOutput(options.enableOutput),
     outputAdapters,
     maxNestingDepth: options.maxNestingDepth || 3,
     transform: options.transform || (() => void 0),

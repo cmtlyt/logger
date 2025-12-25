@@ -22,6 +22,15 @@ export function defineAdapter<T, C extends (...args: any[]) => OutputAdapter<T>>
   return callback;
 }
 
+function stringifyObject(key: string, value: any, map: Map<string, any>) {
+  if (map.has(value)) {
+    const cirKey = map.get(value);
+    return `[Circular ${cirKey ? `key: ${cirKey}` : 'self'}]`;
+  }
+  map.set(value, key);
+  return value;
+}
+
 /**
  * 将对象转换为格式化的JSON字符串，支持函数和循环引用处理
  *
@@ -49,25 +58,28 @@ export function defineAdapter<T, C extends (...args: any[]) => OutputAdapter<T>>
 export function objectStringify(obj: any) {
   const map = new Map<any, string>();
 
-  return JSON.stringify(
+  const objStr = JSON.stringify(
     obj,
     (key, value) => {
+      if (typeof value === 'bigint') {
+        return value.toString();
+      }
       if (typeof value === 'function') {
         const funcStr = value.toString();
         return funcStr.includes('=>') || funcStr.startsWith('function') ? funcStr : `function ${funcStr}`;
       }
       if (typeof value === 'object') {
-        if (map.has(value)) {
-          const cirKey = map.get(value);
-          return `[Circular ${cirKey ? `key: ${cirKey}` : 'self'}]`;
-        }
-        map.set(value, key);
+        return stringifyObject(key, value, map);
       }
       return value;
     },
     2,
-    // \u00A0 is a non-breaking space
-  ).replace(/\n(\s+)/g, (_, { length }) => `\n${'\u00A0'.repeat(length)}`);
+  );
+  if (!objStr || typeof objStr.replace !== 'function') {
+    return objStr;
+  }
+  // \u00A0 is a non-breaking space
+  return objStr.replace(/\n(\s+)/g, (_, { length }) => `\n${'\u00A0'.repeat(length)}`);
 }
 
 /**
@@ -90,4 +102,97 @@ export function objectStringify(obj: any) {
  */
 export function isWeb() {
   return typeof globalThis.window !== 'undefined';
+}
+
+/**
+ * 检测当前环境是否为Node.js环境
+ *
+ * 通过检查是否存在process对象和console对象来判断运行环境
+ *
+ * @returns true表示Node.js环境，false表示非Node.js环境
+ *
+ * @example
+ * ```typescript
+ * if (isNode()) {
+ *   // 在Node.js环境中执行的代码
+ *   console.log('Running in Node.js');
+ * } else {
+ *   // 在浏览器或其他环境中执行的代码
+ *   console.log('Running in browser');
+ * }
+ * ```
+ */
+export function isNode() {
+  // biome-ignore lint/correctness/noProcessGlobal: 忽略导入, 因为这个文件可能会在web环境导入
+  return typeof process !== 'undefined' && !!(process.versions && process.versions.node);
+}
+
+/**
+ * 创建日志类型检查器
+ *
+ * 支持三种配置模式：
+ * - string[]: 扩展模式，在默认类型基础上添加指定类型
+ * - Set<string>: 替换模式，完全替换默认类型
+ * - function: 函数模式，通过函数判断是否允许某个类型
+ *
+ * @param allowTypes 允许的日志类型配置
+ * @returns 类型检查器（Set或函数）
+ *
+ * @example
+ * ```typescript
+ * // 扩展模式：在默认类型基础上添加自定义类型
+ * const checker1 = createAllowTypesChecker(['custom', 'special']);
+ *
+ * // 替换模式：完全替换默认类型
+ * const checker2 = createAllowTypesChecker(new Set(['info', 'error']));
+ *
+ * // 函数模式：自定义判断逻辑
+ * const checker3 = createAllowTypesChecker((type) => type.startsWith('app_'));
+ * ```
+ */
+export function createAllowTypesChecker(allowTypes?: string[] | Set<string> | ((type: string) => boolean)) {
+  const defaultTypes = new Set(['debug', 'info', 'warn', 'error']);
+
+  if (!allowTypes) {
+    return defaultTypes;
+  }
+
+  if (typeof allowTypes === 'function') {
+    // 函数格式：完全替换逻辑
+    return allowTypes;
+  }
+
+  if (Array.isArray(allowTypes)) {
+    // 数组格式：扩展逻辑（在默认类型基础上添加）
+    const extendedTypes = new Set(defaultTypes);
+    allowTypes.forEach((type) => {
+      extendedTypes.add(type);
+    });
+    return extendedTypes;
+  }
+
+  // Set格式：完全替换逻辑
+  return allowTypes;
+}
+
+/**
+ * 检查指定的日志类型是否被允许
+ *
+ * @param logType 要检查的日志类型
+ * @param checker 类型检查器（由createAllowTypesChecker创建）
+ * @returns true表示允许，false表示不允许
+ *
+ * @example
+ * ```typescript
+ * const checker = createAllowTypesChecker(['info', 'error']);
+ *
+ * console.log(isTypeAllowed('info', checker));  // true
+ * console.log(isTypeAllowed('debug', checker)); // false
+ * ```
+ */
+export function isTypeAllowed(logType: string, checker: Set<string> | ((type: string) => boolean)) {
+  if (typeof checker === 'function') {
+    return checker(logType);
+  }
+  return checker.has(logType);
 }

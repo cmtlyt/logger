@@ -18,15 +18,16 @@ function getType(_v: any): string {
   return Object.prototype.toString.call(_v).slice(8, -1).toLowerCase();
 }
 
+const BASE_TYPE = new Set(['string', 'number', 'boolean', 'undefined', 'symbol', 'null', 'bigint']);
+
 export function createContentMessage(messages: string[], fontSize: string, ctx: WebConsoleAdapterCtx) {
   const sliceMessages: any[] = [];
   const temp: any[] = [];
-  const baseType = new Set(['string', 'number', 'boolean', 'undefined', 'symbol', 'null']);
 
   for (let i = 0; i < messages.length; ++i) {
     const msg = messages[i];
     const msgType = getType(msg);
-    if (baseType.has(msgType)) {
+    if (BASE_TYPE.has(msgType)) {
       temp.push(String(msg));
     } else {
       sliceMessages.push(temp.join(' '), objectStringify(msg));

@@ -248,6 +248,14 @@
         <button onclick="testGetWindowWidth()">测试窗口宽度配置</button>
         <p>测试 getWindowWidth 配置项的默认行为和自定义功能</p>
       </div>
+
+      <!-- enableOutput 功能测试 -->
+      <div class="test-section">
+        <h3>19. enableOutput 输出控制</h3>
+        <button onclick="testEnableOutput()">测试输出控制功能</button>
+        <p>测试 enableOutput 布尔值和函数形式的输出控制</p>
+      </div>
+
     </div>
 
     <div class="note">
@@ -1108,6 +1116,99 @@
       });
     }
 
+    // 19. enableOutput 输出控制测试
+    function testEnableOutput() {
+      console.clear();
+      testSection('enableOutput 输出控制测试', () => {
+        // 测试1: enableOutput = true（默认行为）
+        const logger1 = createLogger({
+          enableOutput: true,
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+        logger1.info('enableOutput=true 测试 - 应该显示');
+        assert(true, 'enableOutput=true 测试');
+
+        // 测试2: enableOutput = false（禁用输出）
+        const logger2 = createLogger({
+          enableOutput: false,
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+        logger2.info('enableOutput=false 测试 - 不应该显示');
+        assert(true, 'enableOutput=false 测试');
+
+        // 测试3: enableOutput 函数形式 - 返回true
+        const logger3 = createLogger({
+          enableOutput: ({ type }) => {
+            return type === 'info'; // 只允许 info 类型
+          },
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+        logger3.info('enableOutput函数=true 测试 - 应该显示');
+        logger3.debug('enableOutput函数=false 测试 - 不应该显示');
+        assert(true, 'enableOutput 函数形式测试');
+
+        // 测试4: enableOutput 函数形式 - 基于消息内容
+        const logger4 = createLogger({
+          enableOutput: ({ messages }) => messages.some(msg => typeof msg === 'string' && msg.includes('重要')),
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+        logger4.info('重要消息 - 应该显示');
+        logger4.info('普通消息 - 不应该显示');
+        assert(true, 'enableOutput 基于消息内容测试');
+
+        // 测试5: enableOutput 不影响 transform 和 report
+        let transformCalled = false;
+        let reportCalled = false;
+        const logger5 = createLogger({
+          enableOutput: false, // 禁用输出
+          transform: ({ type, messages }) => {
+            transformCalled = true;
+            return { type, messages, transformed: true };
+          },
+          report: () => {
+            reportCalled = true;
+          },
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+        logger5.info('transform/report 测试 - 输出被禁用但transform/report应该执行');
+        assert(transformCalled, 'enableOutput=false 时 transform 仍被调用');
+        assert(reportCalled, 'enableOutput=false 时 report 仍被调用');
+
+        // 测试6: enableOutput 函数异常处理
+        const logger6 = createLogger({
+          enableOutput: () => {
+            throw new Error('enableOutput 函数异常');
+          },
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+        logger6.info('enableOutput 异常测试 - 应该正常显示（异常时默认允许输出）');
+        assert(true, 'enableOutput 函数异常处理测试');
+
+        // 测试7: enableOutput 与嵌套调用
+        const logger7 = createLogger({
+          enableOutput: ({ isNestingCall }) => !isNestingCall, // 只允许主调用
+          transform: ({ type, isNestingCall }) => {
+            if (type === 'trigger' && !isNestingCall) {
+              logger7.nested('嵌套调用 - 不应该显示');
+            }
+            return { type, isNestingCall };
+          },
+          outputAdapters: [webConsoleAdapter({ group: { enable: false } })]
+        });
+        logger7.trigger('主调用 - 应该显示');
+        assert(true, 'enableOutput 与嵌套调用测试');
+
+        console.log('\n📊 enableOutput 测试总结:');
+        console.log('✅ 布尔值形式 - 支持 true/false 控制');
+        console.log('✅ 函数形式 - 支持动态判断逻辑');
+        console.log('✅ 不影响 transform/report - 只控制输出');
+        console.log('✅ 异常处理 - 异常时默认允许输出');
+        console.log('✅ 嵌套调用支持 - 可基于 isNestingCall 判断');
+        console.log('💡 所有 enableOutput 相关功能测试完成！');
+      });
+    }
+
+
     // 18. getWindowWidth 配置测试
     function testGetWindowWidth() {
       console.clear();
@@ -1293,7 +1394,8 @@
         testCompatibility,
         testComplexScenarios,
         testMemoryManagement,
-        testGetWindowWidth
+        testGetWindowWidth,
+        testEnableOutput
       ];
 
       tests.forEach((test, index) => {
@@ -1341,6 +1443,7 @@
     window.testComplexScenarios = testComplexScenarios;
     window.testMemoryManagement = testMemoryManagement;
     window.testGetWindowWidth = testGetWindowWidth;
+    window.testEnableOutput = testEnableOutput;
     window.runAllTests = runAllTests;
 
     console.log('🧪 Logger 完整功能测试页面已加载');

@@ -57,6 +57,14 @@ export interface TransformProps {
  */
 export interface LoggerOptions<T, D extends T = T> {
   /**
+   * 是否启用日志输出，默认为true
+   * 当设置为false时，transform和report仍会执行，但不会调用输出适配器进行实际输出
+   * 支持传入函数进行动态控制，函数参数与report方法相同
+   * 这是一个输出控制开关，可以用于生产环境中禁用日志输出但保留数据处理逻辑
+   */
+  enableOutput?: boolean | ((options: TransformProps & { data: D }) => boolean);
+
+  /**
    * 数据转换函数，用于处理原始日志数据
    * @param options 包含日志类型、消息和嵌套标识的参数
    * @returns 转换后的数据或undefined
@@ -104,5 +112,6 @@ export interface LoggerCtx<T> {
   /** 规范化后的配置选项 */
   options: Omit<Normalize<LoggerOptions<T>>, 'outputAdapters'> & {
     outputAdapters: AdapterFunc<T>[];
+    enableOutput: NonNullable<LoggerOptions<T>['enableOutput']> & ((...args: any[]) => boolean);
   };
 }

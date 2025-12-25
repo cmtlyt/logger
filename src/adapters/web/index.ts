@@ -1,6 +1,5 @@
-import type { OutputFunc } from '@/types';
-import { defineAdapter, isWeb } from '../utils';
-import { createAllowTypesChecker, isTypeAllowed } from './allow-types-checker';
+import type { OutputAdapter, OutputFunc } from '@/types';
+import { createAllowTypesChecker, defineAdapter, isTypeAllowed, isWeb } from '../utils';
 import { messageTransform } from './style-utils';
 import type { WebConsoleAdapterCtx, WebConsoleAdapterOptions } from './types';
 
@@ -67,16 +66,16 @@ function normalizeOptions(options: WebConsoleAdapterOptions): WebConsoleAdapterC
  * });
  * ```
  */
-export const webConsoleAdapter = defineAdapter(<T>(options?: WebConsoleAdapterOptions<T>) => {
+export const webConsoleAdapter = defineAdapter(<T>(options?: WebConsoleAdapterOptions<T>): OutputAdapter<T> => {
   const ctx: WebConsoleAdapterCtx = { options: normalizeOptions(options || {}) };
   const allowTypesChecker = createAllowTypesChecker(ctx.options.allowTypes);
-  const environmentValidator = ctx.options.isEnvironmentValid;
+  const environmentValid = ctx.options.isEnvironmentValid();
+
+  if (!environmentValid) {
+    return {};
+  }
 
   return (type) => {
-    if (!environmentValidator()) {
-      return null;
-    }
-
     if (!isTypeAllowed(type, allowTypesChecker)) {
       return null;
     }

@@ -1,6 +1,6 @@
 {
   "name": "@cmtlyt/logger",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "type": "module",
   "main": "./dist/index.cjs",
   "types": "./dist/index.d.ts",
@@ -26,9 +26,13 @@
     "@commitlint/config-conventional": "^20.2.0",
     "@rslib/core": "^0.18.4",
     "@types/node": "^24.10.1",
+    "esno": "^4.8.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "typescript": "^5.9.3"
+  },
+  "optionalDependencies": {
+    "yoctocolors": "^2.1.2"
   },
   "devEngines": {
     "runtime": {
@@ -68,6 +72,16 @@
       "require": {
         "types": "./dist/adapters/web/index.d.ts",
         "default": "./dist/adapters/web/index.cjs"
+      }
+    },
+    "./adapters/node": {
+      "import": {
+        "types": "./dist/adapters/node/index.d.ts",
+        "default": "./dist/adapters/node/index.js"
+      },
+      "require": {
+        "types": "./dist/adapters/node/index.d.ts",
+        "default": "./dist/adapters/node/index.cjs"
       }
     }
   },

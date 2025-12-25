@@ -6,6 +6,7 @@ export default defineConfig({
       index: './src/index.ts',
       'adapters/index': './src/adapters/index.ts',
       'adapters/web/index': './src/adapters/web/index.ts',
+      'adapters/node/index': './src/adapters/node/index.ts',
     },
   },
   lib: [
