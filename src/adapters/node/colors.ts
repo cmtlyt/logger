@@ -1,28 +1,38 @@
-import { createRequire } from 'node:module';
+import { isWeb } from '../utils';
 import type { CustomColorizerOptions, ThemeColor } from './types';
-
-const require = createRequire(import.meta.url);
 
 /**
  * 尝试导入yoctocolors，如果不可用则返回null
  */
 export const tryImportColors = (() => {
   let loaded = false;
+  let colors = null as any;
 
-  return () => {
-    try {
-      const colors = require('yoctocolors');
+  if (isWeb()) {
+    return () => null;
+  }
+
+  return async () => {
+    if (loaded) {
       return colors;
-    } catch {
-      if (!loaded) {
-        console.warn(
-          'yoctocolors is not available, fallback to plain text, you can customize the shader function through the customColorizer function, or add yoctocolors dependency',
-        );
-      }
-      return null;
-    } finally {
-      loaded = true;
     }
+    return import('yoctocolors')
+      .then(
+        (module) => {
+          colors = module.default;
+        },
+        () => {
+          if (!loaded) {
+            console.warn(
+              'yoctocolors is not available, fallback to plain text, you can customize the shader function through the customColorizer function, or add yoctocolors dependency',
+            );
+          }
+        },
+      )
+      .then(() => {
+        loaded = true;
+        return colors;
+      });
   };
 })();
 

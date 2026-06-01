@@ -7,15 +7,16 @@ function getOutputFunc(_type: string, adapters: LoggerCtx<any>['options']['outpu
 }
 
 const STATUS = {
-  padding: 0,
+  pending: 0,
   processing: 1,
-  skiping: 1 << 1,
+  skipping: 1 << 1,
+  initializing: 1 << 2,
 };
 
-function createLogCtrl() {
+function createLogCtrl(readyPromise: Promise<void>) {
   const logFuncMap = new Map<PropertyKey, (...messages: any[]) => void>();
   const nestingCallsSet = new Set<(depth: number) => void>();
-  let status: number = STATUS.padding;
+  let status: number = STATUS.initializing;
 
   return {
     func: (_type: string, { options }: LoggerCtx<any>) => {
@@ -47,11 +48,35 @@ function createLogCtrl() {
         return outputFunc({ type: _type, messages, transformData: data });
       };
 
-      const logFunc = (...messages: any[]) => {
+      const handleDepthCall = () => {
+        for (let i = 1; i <= maxNestingDepth && nestingCallsSet.size; i++) {
+          const calls = Array.from(nestingCallsSet);
+          nestingCallsSet.clear();
+          if (i === maxNestingDepth) {
+            status = STATUS.skipping;
+          }
+          calls.forEach((call) => {
+            call(i);
+          });
+        }
+      };
+
+      const readyError = (error: any) => {
+        console.warn(error);
+        // 拒绝输出
+        options.enableOutput = () => false;
+      };
+
+      const logFunc = async (...messages: any[]) => {
+        if (status === STATUS.initializing) {
+          await readyPromise.catch(readyError).finally(() => {
+            status = STATUS.pending;
+          });
+        }
         // 如果正在处理或跳过, 则将调用放入队列
-        if (status & (STATUS.processing | STATUS.skiping)) {
+        if (status & (STATUS.processing | STATUS.skipping)) {
           // 如果正在跳过, 则发出警告
-          if (status & STATUS.skiping) {
+          if (status & STATUS.skipping) {
             getOutputFunc(
               'warn',
               options.outputAdapters,
@@ -71,23 +96,16 @@ function createLogCtrl() {
         status = STATUS.processing;
         processLog(messages, 0);
 
-        for (let i = 1; i <= maxNestingDepth && nestingCallsSet.size; i++) {
-          const calls = Array.from(nestingCallsSet);
-          nestingCallsSet.clear();
-          if (i === maxNestingDepth) {
-            status = STATUS.skiping;
-          }
-          calls.forEach((call) => {
-            call(i);
-          });
-        }
+        handleDepthCall();
 
-        status = STATUS.padding;
+        status = STATUS.pending;
         nestingCallsSet.clear();
       };
 
-      logFuncMap.set(_type, logFunc);
-      return logFunc;
+      const finalLogFunc = (...args: any[]) => void logFunc(...args);
+
+      logFuncMap.set(_type, finalLogFunc);
+      return finalLogFunc;
     },
   };
 }
@@ -153,8 +171,9 @@ function createLogCtrl() {
  * ```
  */
 export function createLogger<T>(options?: LoggerOptions<T>): Logger {
-  const ctx: LoggerCtx<T> = { options: normalizeOptions(options || {}) };
-  const logCtrl = createLogCtrl();
+  const { options: normalizedOptions, readyPromise } = normalizeOptions(options || {});
+  const ctx: LoggerCtx<T> = { options: normalizedOptions };
+  const logCtrl = createLogCtrl(readyPromise);
 
   return new Proxy(
     {},

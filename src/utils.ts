@@ -12,6 +12,54 @@ function normalizeEnableOutput<T>(
   return () => enableOutput;
 }
 
+export function withResolvers<T>() {
+  const resolvers = {} as { resolve: (value: T) => void; reject: (reason?: any) => void; promise: Promise<T> };
+
+  resolvers.promise = new Promise((resolve, reject) => {
+    resolvers.resolve = resolve;
+    resolvers.reject = reject;
+  });
+
+  return resolvers;
+}
+
+export function isPromise(value: any): value is Promise<any> {
+  return typeof value === 'object' && value != null && typeof (value as any).then === 'function';
+}
+
+export function parseOutputAdapters(
+  options: LoggerOptions<any>,
+  resolvers: { reject: (reason?: any) => void; resolve: () => void },
+) {
+  // biome-ignore lint/style/noNonNullAssertion: 已经在外部校验
+  const tempAdapters = options.outputAdapters!.filter(Boolean).slice();
+  const outputAdapters = new Array(tempAdapters.length);
+
+  void (async () => {
+    try {
+      for (let i = 0; i < tempAdapters.length; i++) {
+        const item = tempAdapters[i];
+        if (typeof item === 'function') {
+          outputAdapters[i] = item;
+        } else if (isPromise(item)) {
+          const temp = await item;
+          if (isPromise(temp)) {
+            throw new TypeError('outputAdapters must not be nested promise');
+          }
+          tempAdapters[i--] = temp;
+        } else {
+          outputAdapters[i] = (type: string) => item[type];
+        }
+      }
+      resolvers.resolve();
+    } catch (err) {
+      resolvers.reject(err);
+    }
+  })();
+
+  return outputAdapters;
+}
+
 /**
  * 规范化Logger配置选项，将用户输入转换为内部使用的标准格式
  *
@@ -38,24 +86,30 @@ function normalizeEnableOutput<T>(
  * // 返回标准化的配置对象
  * ```
  */
-export function normalizeOptions<T>(options: LoggerOptions<T>): LoggerCtx<T>['options'] {
-  let outputAdapters: LoggerCtx<any>['options']['outputAdapters'];
+export function normalizeOptions<T>(options: LoggerOptions<T>): {
+  options: LoggerCtx<T>['options'];
+  readyPromise: Promise<void>;
+} {
+  let outputAdapters: LoggerCtx<any>['options']['outputAdapters'] = [];
+  const resolvers = withResolvers<void>();
 
   if (options.outputAdapters == null) {
     outputAdapters = [];
+    resolvers.resolve();
   } else if (Array.isArray(options.outputAdapters)) {
-    outputAdapters = options.outputAdapters
-      .filter(Boolean)
-      .map((item) => (typeof item === 'function' ? item : (type) => item[type]));
+    outputAdapters = parseOutputAdapters(options, resolvers);
   } else {
     throw new TypeError('outputAdapters must be an array');
   }
 
   return {
-    enableOutput: normalizeEnableOutput(options.enableOutput),
-    outputAdapters,
-    maxNestingDepth: options.maxNestingDepth || 3,
-    transform: options.transform || (() => void 0),
-    report: options.report || (() => void 0),
+    options: {
+      enableOutput: normalizeEnableOutput(options.enableOutput),
+      outputAdapters,
+      maxNestingDepth: options.maxNestingDepth || 3,
+      transform: options.transform || (() => void 0),
+      report: options.report || (() => void 0),
+    },
+    readyPromise: resolvers.promise,
   };
 }

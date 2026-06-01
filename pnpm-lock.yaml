@@ -11,9 +11,6 @@ importers:
       '@biomejs/biome':
         specifier: 2.3.1
         version: 2.3.1
-      '@cmtlyt/logger':
-        specifier: ^0.2.8
-        version: 0.2.8
       '@commitlint/cli':
         specifier: ^20.2.0
         version: 20.2.0(@types/node@24.10.4)(typescript@5.9.3)
@@ -163,9 +160,6 @@ packages:
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [win32]
-
-  '@cmtlyt/logger@0.2.8':
-    resolution: {integrity: sha512-Cnn/81FsBAa00dTZsr2fj8PoI62hu5i+8QMgqoPaSrdgD+Lr5TFAtvdlsANN1OXEfOD1M7hFLYzOSdyxIGOZhQ==}
 
   '@commitlint/cli@20.2.0':
     resolution: {integrity: sha512-l37HkrPZ2DZy26rKiTUvdq/LZtlMcxz+PeLv9dzK9NzoFGuJdOQyYU7IEkEQj0pO++uYue89wzOpZ0hcTtoqUA==}
@@ -1099,8 +1093,6 @@ snapshots:
 
   '@biomejs/cli-win32-x64@2.3.1':
     optional: true
-
-  '@cmtlyt/logger@0.2.8': {}
 
   '@commitlint/cli@20.2.0(@types/node@24.10.4)(typescript@5.9.3)':
     dependencies:

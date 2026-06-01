@@ -85,32 +85,34 @@ function getAdapter(ctx: NodeConsoleAdapterCtx): OutputFunc {
  * });
  * ```
  */
-export const nodeConsoleAdapter = defineAdapter(<T>(options?: NodeConsoleAdapterOptions<T>): OutputAdapter<T> => {
-  const colors = tryImportColors();
-  const ctx: NodeConsoleAdapterCtx = {
-    options: normalizeOptions(options || {}),
-    colors,
-  };
+export const nodeConsoleAdapter = defineAdapter(
+  async <T>(options?: NodeConsoleAdapterOptions<T>): Promise<OutputAdapter<T>> => {
+    const colors = typeof options?.customColorizer === 'function' ? null : await tryImportColors();
+    const ctx: NodeConsoleAdapterCtx = {
+      options: normalizeOptions(options || {}),
+      colors,
+    };
 
-  // 如果yoctocolors不可用，禁用颜色
-  if (!colors && ctx.options.enableColors) {
-    ctx.options.enableColors = false;
-  }
-
-  const allowTypesChecker = createAllowTypesChecker(ctx.options.allowTypes);
-  const environmentValid = ctx.options.isEnvironmentValid();
-
-  if (!environmentValid) {
-    return {};
-  }
-
-  return (type) => {
-    if (!isTypeAllowed(type, allowTypesChecker)) {
-      return null;
+    // 如果yoctocolors不可用，禁用颜色
+    if (!colors && ctx.options.enableColors) {
+      ctx.options.enableColors = false;
     }
 
-    return getAdapter(ctx);
-  };
-});
+    const allowTypesChecker = createAllowTypesChecker(ctx.options.allowTypes);
+    const environmentValid = ctx.options.isEnvironmentValid();
+
+    if (!environmentValid) {
+      return {};
+    }
+
+    return (type) => {
+      if (!isTypeAllowed(type, allowTypesChecker)) {
+        return null;
+      }
+
+      return getAdapter(ctx);
+    };
+  },
+);
 
 export type { NodeConsoleAdapterOptions } from './types';

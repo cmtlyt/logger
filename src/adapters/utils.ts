@@ -18,7 +18,9 @@ import type { OutputAdapter } from '../types';
  * });
  * ```
  */
-export function defineAdapter<T, C extends (...args: any[]) => OutputAdapter<T>>(callback: C): C {
+export function defineAdapter<T, C extends (...args: any[]) => OutputAdapter<T> | Promise<OutputAdapter<T>>>(
+  callback: C,
+): C {
   return callback;
 }
 
@@ -123,7 +125,8 @@ export function isWeb() {
  * ```
  */
 export function isNode() {
-  // biome-ignore lint/correctness/noProcessGlobal: 忽略导入, 因为这个文件可能会在web环境导入
+  // !这里的报错不需要管
+  // biome-ignore lint/correctness/noProcessGlobal: 忽略防止导入 node:process 导致的环境错误
   return typeof process !== 'undefined' && !!(process.versions && process.versions.node);
 }
 
