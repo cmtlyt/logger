@@ -32,14 +32,15 @@ export type OutputFunc<T = any> = InfoFunc<T, void>;
  */
 export type AdapterFunc<T = any> = (type: string) => OutputFunc<T> | null | undefined;
 
+export type SyncOutputAdapter<T = any> = Record<string, OutputFunc<T>> | AdapterFunc<T>;
+
+export type PromiseOutputAdapter<T = any> = Promise<SyncOutputAdapter<T>>;
+
 /**
  * 输出适配器类型，可以是对象映射或适配器函数
  * @template T 数据类型
  */
-export type OutputAdapter<T = any> =
-  | Record<string, OutputFunc<T>>
-  | AdapterFunc<T>
-  | Promise<Record<string, OutputFunc<T>> | AdapterFunc<T>>;
+export type OutputAdapter<T = any> = SyncOutputAdapter<T> | PromiseOutputAdapter;
 
 /**
  * Transform 函数的输入参数接口

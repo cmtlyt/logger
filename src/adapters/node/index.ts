@@ -1,4 +1,4 @@
-import type { OutputAdapter, OutputFunc } from '@/types';
+import type { OutputFunc, SyncOutputAdapter } from '@/types';
 import { createAllowTypesChecker, defineAdapter, isTypeAllowed } from '../utils';
 import { tryImportColors } from './colors';
 import { formatMessage } from './formatter';
@@ -86,7 +86,7 @@ function getAdapter(ctx: NodeConsoleAdapterCtx): OutputFunc {
  * ```
  */
 export const nodeConsoleAdapter = defineAdapter(
-  async <T>(options?: NodeConsoleAdapterOptions<T>): Promise<OutputAdapter<T>> => {
+  async <T>(options?: NodeConsoleAdapterOptions<T>): Promise<SyncOutputAdapter<T>> => {
     const colors = typeof options?.customColorizer === 'function' ? null : await tryImportColors();
     const ctx: NodeConsoleAdapterCtx = {
       options: normalizeOptions(options || {}),
