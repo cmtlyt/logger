@@ -52,6 +52,8 @@ export interface TransformProps {
   messages: any[];
   /** 是否为嵌套调用，主调用为false，嵌套调用为true */
   isNestingCall: boolean;
+  /** 时间戳 */
+  timestamp: number;
 }
 
 /**

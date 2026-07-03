@@ -1,4 +1,4 @@
-import type { Logger, LoggerCtx, LoggerOptions } from './types';
+import type { Logger, LoggerCtx, LoggerOptions, OutputFunc, TransformProps } from './types';
 import { normalizeOptions } from './utils';
 
 function getOutputFunc(_type: string, adapters: LoggerCtx<any>['options']['outputAdapters']) {
@@ -26,10 +26,10 @@ function createLogCtrl(readyPromise: Promise<void>) {
         return logFuncMap.get(_type);
       }
 
-      const outputFunc = getOutputFunc(_type, options.outputAdapters);
+      let outputFunc: OutputFunc<any> | null = null;
 
       const processLog = (messages: any[], depth: number) => {
-        const info = { type: _type, messages, isNestingCall: depth > 0 };
+        const info: TransformProps = { type: _type, messages, isNestingCall: depth > 0, timestamp: Date.now() };
         const data = options.transform(info) || {};
         options.report({ ...info, data });
 
@@ -42,7 +42,7 @@ function createLogCtrl(readyPromise: Promise<void>) {
           shouldOutput = true;
         }
 
-        if (!shouldOutput) {
+        if (!(shouldOutput && outputFunc)) {
           return;
         }
         return outputFunc({ type: _type, messages, transformData: data });
@@ -72,6 +72,7 @@ function createLogCtrl(readyPromise: Promise<void>) {
           await readyPromise.catch(readyError).finally(() => {
             status = STATUS.pending;
           });
+          outputFunc = getOutputFunc(_type, options.outputAdapters);
         }
         // 如果正在处理或跳过, 则将调用放入队列
         if (status & (STATUS.processing | STATUS.skipping)) {
